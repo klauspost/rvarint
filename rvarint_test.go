@@ -6,6 +6,7 @@ package rvarint
 
 import (
 	"math"
+	"math/rand"
 	"slices"
 	"testing"
 )
@@ -90,6 +91,10 @@ func TestVarint(t *testing.T) {
 		testVarint(t, x)
 		testVarint(t, -x)
 	}
+	rng := rand.New(rand.NewSource(0))
+	for i := 0; i < 1e7; i++ {
+		testVarint(t, int64(rng.Uint64()))
+	}
 }
 
 func TestUvarint(t *testing.T) {
@@ -98,6 +103,10 @@ func TestUvarint(t *testing.T) {
 	}
 	for x := uint64(0x7); x != 0; x <<= 1 {
 		testUvarint(t, x)
+	}
+	rng := rand.New(rand.NewSource(1))
+	for i := 0; i < 1e7; i++ {
+		testUvarint(t, rng.Uint64())
 	}
 }
 

@@ -11,7 +11,6 @@
 package rvarint
 
 import (
-	"fmt"
 	"math/bits"
 )
 
@@ -25,16 +24,13 @@ const (
 // AppendUvarint appends the reverse varint-encoded form of x
 // to buf and returns the extended buffer.
 func AppendUvarint(buf []byte, x uint64) []byte {
-	var tmp [MaxVarintLen64]byte
-	n := 0
-	for x >= 0x80 {
-		tmp[n] = byte(x | 0x80)
-		x >>= 7
-		n++
-	}
-	tmp[n] = byte(x)
-	for i := n; i >= 0; i-- {
-		buf = append(buf, tmp[i])
+	n := (bits.Len64(x) - 1) / 7
+	sh := uint(n * 7)
+	buf = append(buf, byte(x>>sh)&0x7f)
+	sh -= 7
+	for ; n > 0; n-- {
+		buf = append(buf, byte(x>>sh)|0x80)
+		sh -= 7
 	}
 	return buf
 }
@@ -42,18 +38,15 @@ func AppendUvarint(buf []byte, x uint64) []byte {
 // PutUvarint encodes a uint64 into buf and returns the number of bytes written.
 // If the buffer is too small, PutUvarint will panic.
 func PutUvarint(buf []byte, x uint64) int {
-	sz := (bits.Len64(x) - 1) / 7
-	i := sz
+	n := (bits.Len64(x) - 1) / 7
+	i := n
 	for x >= 0x80 {
 		buf[i] = byte(x) | 0x80
 		x >>= 7
 		i--
 	}
-	if i != 0 {
-		panic(fmt.Sprint("did not hit 0 i:", i))
-	}
 	buf[i] = byte(x)
-	return sz + 1
+	return n + 1
 }
 
 // AppendVarint appends the varint-encoded form of x,
